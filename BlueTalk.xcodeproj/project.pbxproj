@@ -15,6 +15,10 @@
 		6F2426FF1E5ECE43006AC596 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6F2426FD1E5ECE43006AC596 /* LaunchScreen.storyboard */; };
 		6F24270A1E5ECE44006AC596 /* BlueTalkTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 6F2427091E5ECE44006AC596 /* BlueTalkTests.m */; };
 		6F2427151E5ECE44006AC596 /* BlueTalkUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 6F2427141E5ECE44006AC596 /* BlueTalkUITests.m */; };
+		6F2427241E5ECE75006AC596 /* ChatItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 6F2427231E5ECE75006AC596 /* ChatItem.m */; };
+		6F2427271E5ECF6F006AC596 /* BlueSessionManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 6F2427261E5ECF6F006AC596 /* BlueSessionManager.m */; };
+		6F24272A1E5ED123006AC596 /* UToChatCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 6F2427291E5ED123006AC596 /* UToChatCell.m */; };
+		6F24272D1E5ED1CE006AC596 /* UToRootViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 6F24272C1E5ED1CE006AC596 /* UToRootViewController.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -51,6 +55,14 @@
 		6F2427101E5ECE44006AC596 /* BlueTalkUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BlueTalkUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		6F2427141E5ECE44006AC596 /* BlueTalkUITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BlueTalkUITests.m; sourceTree = "<group>"; };
 		6F2427161E5ECE44006AC596 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		6F2427221E5ECE75006AC596 /* ChatItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ChatItem.h; sourceTree = "<group>"; };
+		6F2427231E5ECE75006AC596 /* ChatItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ChatItem.m; sourceTree = "<group>"; };
+		6F2427251E5ECF6F006AC596 /* BlueSessionManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BlueSessionManager.h; sourceTree = "<group>"; };
+		6F2427261E5ECF6F006AC596 /* BlueSessionManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BlueSessionManager.m; sourceTree = "<group>"; };
+		6F2427281E5ED123006AC596 /* UToChatCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UToChatCell.h; sourceTree = "<group>"; };
+		6F2427291E5ED123006AC596 /* UToChatCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UToChatCell.m; sourceTree = "<group>"; };
+		6F24272B1E5ED1CE006AC596 /* UToRootViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UToRootViewController.h; sourceTree = "<group>"; };
+		6F24272C1E5ED1CE006AC596 /* UToRootViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UToRootViewController.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -105,6 +117,14 @@
 				6F2426F31E5ECE43006AC596 /* AppDelegate.m */,
 				6F2426F51E5ECE43006AC596 /* ViewController.h */,
 				6F2426F61E5ECE43006AC596 /* ViewController.m */,
+				6F2427221E5ECE75006AC596 /* ChatItem.h */,
+				6F2427231E5ECE75006AC596 /* ChatItem.m */,
+				6F2427281E5ED123006AC596 /* UToChatCell.h */,
+				6F2427291E5ED123006AC596 /* UToChatCell.m */,
+				6F2427251E5ECF6F006AC596 /* BlueSessionManager.h */,
+				6F2427261E5ECF6F006AC596 /* BlueSessionManager.m */,
+				6F24272B1E5ED1CE006AC596 /* UToRootViewController.h */,
+				6F24272C1E5ED1CE006AC596 /* UToRootViewController.m */,
 				6F2426F81E5ECE43006AC596 /* Main.storyboard */,
 				6F2426FB1E5ECE43006AC596 /* Assets.xcassets */,
 				6F2426FD1E5ECE43006AC596 /* LaunchScreen.storyboard */,
@@ -202,12 +222,13 @@
 		6F2426E41E5ECE43006AC596 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				CLASSPREFIX = UTo;
 				LastUpgradeCheck = 0820;
 				ORGANIZATIONNAME = Weighter;
 				TargetAttributes = {
 					6F2426EB1E5ECE43006AC596 = {
 						CreatedOnToolsVersion = 8.2.1;
-						DevelopmentTeam = XGR7BG96S6;
+						DevelopmentTeam = L8M3JLXHT8;
 						ProvisioningStyle = Automatic;
 					};
 					6F2427041E5ECE44006AC596 = {
@@ -276,8 +297,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6F2427241E5ECE75006AC596 /* ChatItem.m in Sources */,
+				6F2427271E5ECF6F006AC596 /* BlueSessionManager.m in Sources */,
+				6F24272A1E5ED123006AC596 /* UToChatCell.m in Sources */,
 				6F2426F71E5ECE43006AC596 /* ViewController.m in Sources */,
 				6F2426F41E5ECE43006AC596 /* AppDelegate.m in Sources */,
+				6F24272D1E5ED1CE006AC596 /* UToRootViewController.m in Sources */,
 				6F2426F11E5ECE43006AC596 /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -425,8 +450,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = XGR7BG96S6;
+				DEVELOPMENT_TEAM = L8M3JLXHT8;
 				INFOPLIST_FILE = BlueTalk/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.utoo.BlueTalk;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -437,8 +463,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = XGR7BG96S6;
+				DEVELOPMENT_TEAM = L8M3JLXHT8;
 				INFOPLIST_FILE = BlueTalk/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.utoo.BlueTalk;
 				PRODUCT_NAME = "$(TARGET_NAME)";

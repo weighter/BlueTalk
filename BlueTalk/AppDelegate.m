@@ -7,7 +7,10 @@
 //
 
 #import "AppDelegate.h"
-#import "UToRootViewController.h"
+#import "UToMsgViewController.h"
+#import "UToLinkmanViewController.h"
+#import "UToMeViewController.h"
+#import "UToBlueSessionManager.h"
 
 @interface AppDelegate ()
 
@@ -22,9 +25,24 @@
     self.window.backgroundColor = [UIColor whiteColor];
     [self.window makeKeyAndVisible];
     
-    UToRootViewController * rootVC = [[UToRootViewController alloc] init];
-    UINavigationController * nav = [[UINavigationController alloc] initWithRootViewController:rootVC];
-    self.window.rootViewController= nav;
+    UToMsgViewController *mvc = [[UToMsgViewController alloc] init];
+    mvc.title = @"消息";
+    UINavigationController *mNav = [[UINavigationController alloc] initWithRootViewController:mvc];
+    
+    UToLinkmanViewController *lvc = [[UToLinkmanViewController alloc] init];
+    lvc.title = @"联系人";
+    UINavigationController *lNav = [[UINavigationController alloc] initWithRootViewController:lvc];
+    
+    UToMeViewController *mevc = [[UToMeViewController alloc] init];
+    mevc.title = @"我";
+    UINavigationController *meNav = [[UINavigationController alloc] initWithRootViewController:mevc];
+    
+    UITabBarController *tabBarController = [[UITabBarController alloc] init];
+    tabBarController.viewControllers = @[mNav, lNav, meNav];
+    self.window.rootViewController= tabBarController;
+    
+    // 初始化  会议室
+    [get_singleton_for_class(UToBlueSessionManager) setDisplayName:[NSString stringWithFormat:@" %@",  [[UIDevice currentDevice] name]]];
     
     return YES;
 }

@@ -34,4 +34,7 @@
 
 //@property(nonatomic,weak)id <CellSelectIndex> delegate;
 
+// 不能用名字相同的属性
+//  记住自动的时候，讲一下 weak  and strong
+
 @end

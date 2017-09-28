@@ -7,34 +7,29 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "UToChatItem.h"
 
-//@protocol CellSelectIndex <NSObject>
-//
-//- (void)cellSelectIndex;
-//
-//@end
+#define MessageLabelFont [UIFont systemFontOfSize:14]
+
+typedef void(^PlayTheRecordAudio)(BOOL startPlay);
 
 @interface UToChatCell : UITableViewCell
 
-@property(nonatomic,strong)UIImageView * lefeView;
-@property(nonatomic,strong)UIImageView * rightView;
-@property(nonatomic,strong)UILabel * leftLabel;
-@property(nonatomic,strong)UILabel * rightLabel;
+@property (nonatomic, strong) UIView *leftGroundView;
+@property (nonatomic, strong) UIView *rightGroundView;
+@property (nonatomic, strong) UIImageView *leftHeadImage;
+@property (nonatomic, strong) UIImageView *rightHeadImage;
+@property (nonatomic, strong) UIImageView *leftBackImageView;
+@property (nonatomic, strong) UIImageView *rightBackImageView;
+@property (nonatomic, strong) UIImageView *leftPicImageView;
+@property (nonatomic, strong) UIImageView *rightPicImageView;
+@property (nonatomic, strong) UILabel *leftLabel;
+@property (nonatomic, strong) UILabel *rightLabel;
+@property (nonatomic, strong) UToChatItem *chatItem;
+@property (nonatomic, copy) PlayTheRecordAudio block;
 
+- (void)setBlock:(PlayTheRecordAudio)block;
 
-@property(nonatomic,strong)UIImageView * leftHeadImage;
-@property(nonatomic,strong)UIImageView * rightHeadImage;
-
-@property(nonatomic,strong)UIImageView * leftPicImage;
-@property(nonatomic,strong)UIImageView * rightPicImage;
-
-
-@property(nonatomic ,strong)UIButton * leftVideoButton;
-@property(nonatomic, strong)UIButton * rightVideoButton;
-
-//@property(nonatomic,weak)id <CellSelectIndex> delegate;
-
-// 不能用名字相同的属性
-//  记住自动的时候，讲一下 weak  and strong
+- (void)showViewIsSelf:(BOOL)isSelf;
 
 @end

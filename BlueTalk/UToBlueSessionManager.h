@@ -8,6 +8,8 @@
 
 #import <Foundation/Foundation.h>
 #import "UToSingleton.h"
+#import "UToChatItem.h"
+#import "UToCommonDBCache.h"
 
 @import MultipeerConnectivity;
 
@@ -32,6 +34,11 @@
 @property(strong, nonatomic) NSDictionary *discoveryInfo; // 发现设备的特征
 
 @property(strong, nonatomic, readonly) MCPeerID *firstPeer; // 第一个连接的 用户
+
+@property (strong, nonatomic, readonly) MCPeerID *myPeerID; // 用户
+
+@property (nonatomic, strong) NSOutputStream *outputStream;
+@property (nonatomic, strong) NSInputStream *inputStream;
 
 /**
  * The service type provided for browsing and advertising.
@@ -88,10 +95,13 @@ single_interface(UToBlueSessionManager)
 - (void)startReceivingResourceOnMainQueue:(BOOL)mainQueue block:(void (^)(NSString *name, MCPeerID *peer, NSProgress *progress))block;
 
 
-- (NSOutputStream *)streamWithName:(NSString *)name toPeer:(MCPeerID *)peerID error:(NSError * __autoreleasing *)error;
+- (void)streamWithName:(NSString *)name toPeer:(MCPeerID *)peerID outputStreamData:(NSData *)outputStreamData error:(NSError * __autoreleasing *)error;
 
 
 - (void)didReceiveStreamFromPeer:(void (^)(NSInputStream *inputStream, MCPeerID *peer, NSString *streamName))streamBlock;
+
+// 接收流完成
+- (void)didFinishReceiveStreamFromPeer:(void (^)(UToChatItem *chatItem, MCPeerID *peer))streamDataBlock;
 
 - (void)peerConnectionStatusOnMainQueue:(BOOL)mainQueue block:(void (^)(MCPeerID *peer, MCSessionState state))status;
 

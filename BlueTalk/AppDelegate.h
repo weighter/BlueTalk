@@ -7,11 +7,15 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "UToChatItem.h"
+#import "UToMessageUpdateDelegate.h"
 
 @interface AppDelegate : UIResponder <UIApplicationDelegate>
 
-@property (strong, nonatomic) UIWindow *window;
+extern AppDelegate *utoDelegate;
 
+@property (strong, nonatomic) UIWindow *window;
+@property (nonatomic, weak) id<UToMessageUpdateDelegate> rdelegate;
 
 @end
 

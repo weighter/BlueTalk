@@ -17,6 +17,13 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
+    self.tabBarItem.badgeValue = @"1";
+    [self performSelector:@selector(test) withObject:nil afterDelay:2.0];
+}
+
+- (void)test {
+    
+    self.tabBarItem.badgeValue = @"0";
 }
 
 - (void)didReceiveMemoryWarning {

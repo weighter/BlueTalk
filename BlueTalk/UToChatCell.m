@@ -10,169 +10,425 @@
 
 @implementation UToChatCell
 
-- (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
-{
+- (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
+    
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
     if (self) {
-        // Initialization code
-        [self makeView];
+        
+        [self createUI];
     }
     return self;
 }
--(void)makeView
-{
-    UIImage * leftImgae = [UIImage imageNamed:@"ReceiverTextNodeBkg.png"];
-    UIImage * rightImage = [UIImage imageNamed:@"SenderTextNodeBkg.png"];
+
+- (void)createUI {
+    
+    UIImage *leftImgae = [UIImage imageNamed:@"chat_recive_nor"];
+    UIImage *rightImage = [UIImage imageNamed:@"chat_send_nor"];
     
     //这里设定一行一像素 当图片拉伸的时候，只放大两个像素
-    
-    leftImgae = [leftImgae stretchableImageWithLeftCapWidth:30 topCapHeight:35];
+    leftImgae = [leftImgae stretchableImageWithLeftCapWidth:leftImgae.size.width/2 topCapHeight:leftImgae.size.height/2];
     // 找一行一列的像素
-    rightImage = [rightImage stretchableImageWithLeftCapWidth:30 topCapHeight:35];
+    rightImage = [rightImage stretchableImageWithLeftCapWidth:rightImage.size.width/2 topCapHeight:rightImage.size.height/2];
     // 设定完了后生成了一个新的image;
     
     //----------------------------------------------------------------------------------------//
-    // 左边头像
-    self.leftHeadImage = [[UIImageView alloc] initWithFrame:CGRectMake(5, 5, 30, 30)];
-    self.leftHeadImage.layer.masksToBounds = YES;
-    self.leftHeadImage.layer.cornerRadius = 12;
-    self.leftHeadImage.image = [UIImage imageNamed:@"f-pCert.png"];
-    [self.contentView addSubview:self.leftHeadImage];
+    // 左边
+    if (!_leftGroundView) {
+        
+        _leftGroundView = [[UIView alloc] init];
+        _leftGroundView.backgroundColor = [UIColor clearColor];
+        [self.contentView addSubview:_leftGroundView];
+    }
     
-    //左边气泡
-    self.leftVideoButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    self.leftVideoButton.frame = CGRectMake(40, 5, 35, 35);
-    //    [self.leftVideoButton addTarget:self action:@selector(recordTheVoice) forControlEvents:UIControlEventTouchUpInside];
-    [self.contentView addSubview:self.leftVideoButton];
+    if (!_leftHeadImage) {
+        
+        _leftHeadImage = [[UIImageView alloc] init];
+        _leftHeadImage.layer.masksToBounds = YES;
+        _leftHeadImage.layer.cornerRadius = 15;
+        _leftHeadImage.image = [UIImage imageNamed:@"qq_addfriend_search_friend"];
+        [_leftGroundView addSubview:_leftHeadImage];
+    }
     
-    self.leftPicImage = [[UIImageView alloc] initWithFrame:CGRectMake(40, 5, 66, 30)];
-    [self.contentView addSubview:self.leftPicImage];
+    if (!_leftBackImageView) {
+        
+        _leftBackImageView = [[UIImageView alloc] init];
+        _leftBackImageView.image = leftImgae; // 这里不是一个小像素的图片？？
+        _leftBackImageView.userInteractionEnabled = YES;
+        [_leftGroundView addSubview:_leftBackImageView];
+    }
     
-    self.lefeView = [[UIImageView alloc] initWithFrame:CGRectMake(40, 5, 66, 30)];
-    self.lefeView.image = leftImgae;
-    // 这里不是一个小像素的图片？？
-    [self.contentView addSubview:self.lefeView];
+    if (!_leftLabel) {
+        
+        _leftLabel = [[UILabel alloc] init];
+        _leftLabel.font = MessageLabelFont;
+        _leftLabel.numberOfLines = 0; // 换行
+        _leftLabel.backgroundColor = [UIColor clearColor];// 设置透明的
+        _leftLabel.textAlignment = NSTextAlignmentLeft;
+        [_leftBackImageView addSubview:_leftLabel];
+    }
     
-    
-    self.leftLabel = [[UILabel alloc] initWithFrame:CGRectMake(15, 5, 1, 1)];
-    self.leftLabel.font = [UIFont systemFontOfSize:14];
-    
-    self.leftLabel.numberOfLines = 0; // 换行
-    
-    self.leftLabel.backgroundColor = [UIColor clearColor];// 设置透明的
-    
-    [self.lefeView addSubview:self.leftLabel];
+    if (!_leftPicImageView) {
+        
+        _leftPicImageView = [[UIImageView alloc] init];
+        _leftPicImageView.layer.cornerRadius = CornerRadius;
+        _leftPicImageView.layer.masksToBounds = YES;
+        [_leftPicImageView addTapTouchTarget:self action:@selector(leftPicImageViewClicked)];
+        [_leftBackImageView addSubview:_leftPicImageView];
+    }
     
     //----------------------------------------------------------------------------------------//
-    
-    self.rightHeadImage = [[UIImageView alloc] initWithFrame:CGRectMake(self.frame.size.width - 35, 5, 30, 30)];
-    self.rightHeadImage.layer.masksToBounds = YES;
-    self.rightHeadImage.layer.cornerRadius = 12;
-    self.rightHeadImage.image = [UIImage imageNamed:@"f-plove.png"];
-    [self.contentView addSubview:self.rightHeadImage];
-    
-    self.rightVideoButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    self.rightVideoButton.frame = CGRectMake(self.frame.size.width - 45 - 40, 5, 35, 35);
-    //    [self.rightVideoButton addTarget:self action:@selector(recordTheVoice) forControlEvents:UIControlEventTouchUpInside];
-    [self.contentView addSubview:self.rightVideoButton];
-    
-    self.rightPicImage = [[UIImageView alloc] initWithFrame:CGRectMake(self.frame.size.width - 45 - 30, 5, 30, 30)];
-    [self.contentView addSubview:self.rightPicImage];
-    
     // 右边
-    self.rightView = [[UIImageView alloc] initWithFrame:CGRectMake(self.frame.size.width - (66+40), 5, 66, 30)];
-    self.rightView.image = rightImage;
-    [self.contentView addSubview:self.rightView];
+    if (!_rightGroundView) {
+        
+        _rightGroundView = [[UIView alloc] init];
+        _rightGroundView.backgroundColor = [UIColor clearColor];
+        [self.contentView addSubview:_rightGroundView];
+    }
     
+    if (!_rightHeadImage) {
+        
+        _rightHeadImage = [[UIImageView alloc] init];
+        _rightHeadImage.layer.masksToBounds = YES;
+        _rightHeadImage.layer.cornerRadius = 12;
+        _rightHeadImage.image = [UIImage imageNamed:@"qq_addfriend_search_friend"];
+        [_rightGroundView addSubview:_rightHeadImage];
+    }
     
-    self.rightLabel = [[UILabel alloc] initWithFrame:CGRectMake(10, 5, 1, 1)];
-    self.rightLabel.font = [UIFont systemFontOfSize:14];
-    self.rightLabel.backgroundColor = [UIColor clearColor];
-    self.rightLabel.numberOfLines = 0;
-    [self.rightView addSubview:self.rightLabel];
+    if (!_rightBackImageView) {
+        
+        _rightBackImageView = [[UIImageView alloc] init];
+        _rightBackImageView.image = rightImage;
+        _rightBackImageView.userInteractionEnabled = YES;
+        [_rightGroundView addSubview:_rightBackImageView];
+    }
     
+    if (!_rightLabel) {
+        
+        _rightLabel = [[UILabel alloc] init];
+        _rightLabel.font = MessageLabelFont;
+        _rightLabel.backgroundColor = [UIColor clearColor];
+        _rightLabel.numberOfLines = 0;
+        _rightLabel.textAlignment = NSTextAlignmentLeft;
+        [_rightBackImageView addSubview:_rightLabel];
+    }
     
+    if (!_rightPicImageView) {
+        
+        _rightPicImageView = [[UIImageView alloc] init];
+        _rightPicImageView.layer.cornerRadius = CornerRadius;
+        _rightPicImageView.layer.masksToBounds = YES;
+        [_rightPicImageView addTapTouchTarget:self action:@selector(rightPicImageViewClicked)];
+        [_rightBackImageView addSubview:_rightPicImageView];
+    }
     
-    
+    [self positionSubviews];
 }
 
-//- (void)recordTheVoice
-//{
-//    [self.delegate cellSelectIndex];
-//}
+- (void)positionSubviews {
+    
+    [self.leftGroundView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(TopMargin);
+        make.left.mas_equalTo(LeftMargin);
+        make.bottom.mas_equalTo(-BottomMargin);
+        make.right.mas_equalTo(-SCREEN_WIDTH/4);
+    }];
+    
+    [self.leftHeadImage mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(0);
+        make.left.mas_equalTo(0);
+        make.width.height.mas_equalTo(30);
+    }];
+    
+    [self.leftBackImageView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(0);
+        make.left.mas_equalTo(_leftHeadImage.mas_right).offset(PixelSpacing);
+        make.right.mas_lessThanOrEqualTo(0);
+        make.width.height.mas_equalTo(30);
+    }];
+    
+    [self.leftLabel mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(PixelSpacing);
+        make.left.mas_equalTo(PixelSpacing+LeftMargin);
+        make.bottom.mas_equalTo(-PixelSpacing);
+        make.right.mas_equalTo(-PixelSpacing-RightMargin);
+    }];
+    
+    [self.leftPicImageView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(TopMargin+PixelSpacing);
+        make.left.mas_equalTo(LeftMargin);
+        make.bottom.mas_equalTo(-BottomMargin-PixelSpacing);
+        make.right.mas_equalTo(-RightMargin);
+    }];
+    
+    [self.rightGroundView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(TopMargin);
+        make.left.mas_equalTo(SCREEN_WIDTH/4);
+        make.bottom.mas_equalTo(-BottomMargin);
+        make.right.mas_equalTo(-RightMargin);
+    }];
+    
+    [self.rightHeadImage mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(0);
+        make.right.mas_equalTo(0);
+        make.width.height.mas_equalTo(30);
+    }];
 
-//泡泡文本
-- (UIView *)bubbleView:(NSString *)text from:(BOOL)fromSelf withPosition:(int)position{
+    [self.rightBackImageView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(0);
+        make.right.mas_equalTo(_rightHeadImage.mas_left).offset(-PixelSpacing);
+        make.left.mas_greaterThanOrEqualTo(0);
+        make.width.height.mas_equalTo(30);
+    }];
     
-    //计算大小
-    UIFont *font = [UIFont systemFontOfSize:14];
-    CGSize size = [text sizeWithFont:font constrainedToSize:CGSizeMake(180.0f, 20000.0f) lineBreakMode:NSLineBreakByWordWrapping];
+    [self.rightLabel mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(PixelSpacing);
+        make.left.mas_equalTo(LeftMargin+PixelSpacing);
+        make.bottom.mas_equalTo(-PixelSpacing);
+        make.right.mas_equalTo(-RightMargin-PixelSpacing);
+    }];
     
-    // build single chat bubble cell with given text
-    UIView *returnView = [[UIView alloc] initWithFrame:CGRectZero];
-    returnView.backgroundColor = [UIColor clearColor];
-    
-    //背影图片
-    UIImage *bubble = [UIImage imageWithContentsOfFile:[[NSBundle mainBundle] pathForResource:fromSelf?@"SenderAppNodeBkg_HL":@"ReceiverTextNodeBkg" ofType:@"png"]];
-    
-    UIImageView *bubbleImageView = [[UIImageView alloc] initWithImage:[bubble stretchableImageWithLeftCapWidth:floorf(bubble.size.width/2) topCapHeight:floorf(bubble.size.height/2)]];
-    NSLog(@"%f,%f",size.width,size.height);
-    
-    
-    //添加文本信息
-    UILabel *bubbleText = [[UILabel alloc] initWithFrame:CGRectMake(fromSelf?15.0f:22.0f, 20.0f, size.width+10, size.height+10)];
-    bubbleText.backgroundColor = [UIColor clearColor];
-    bubbleText.font = font;
-    bubbleText.numberOfLines = 0;
-    bubbleText.lineBreakMode = NSLineBreakByWordWrapping;
-    bubbleText.text = text;
-    
-    bubbleImageView.frame = CGRectMake(0.0f, 14.0f, bubbleText.frame.size.width+30.0f, bubbleText.frame.size.height+20.0f);
-    
-    if(fromSelf)
-        returnView.frame = CGRectMake(320-position-(bubbleText.frame.size.width+30.0f), 0.0f, bubbleText.frame.size.width+30.0f, bubbleText.frame.size.height+30.0f);
-    else
-        returnView.frame = CGRectMake(position, 0.0f, bubbleText.frame.size.width+30.0f, bubbleText.frame.size.height+30.0f);
-    
-    [returnView addSubview:bubbleImageView];
-    [returnView addSubview:bubbleText];
-    
-    return returnView;
+    [self.rightPicImageView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(TopMargin+PixelSpacing);
+        make.left.mas_equalTo(LeftMargin);
+        make.bottom.mas_equalTo(-BottomMargin-PixelSpacing);
+        make.right.mas_equalTo(-RightMargin);
+    }];
 }
 
-//泡泡语音
-- (UIView *)yuyinView:(NSInteger)logntime from:(BOOL)fromSelf withIndexRow:(NSInteger)indexRow  withPosition:(int)position{
+- (void)leftPicImageViewClicked {
     
-    //根据语音长度
-    int yuyinwidth = 66+fromSelf;
+    if (self.leftPicImageView.isAnimating) {
+        
+        [self.leftPicImageView stopAnimating];
+    } else {
+        
+        self.leftPicImageView.animationImages = @[
+                                                  [UIImage imageNamed:@"message_voice_receiver_playing_1"],
+                                                  [UIImage imageNamed:@"message_voice_receiver_playing_2"],
+                                                  [UIImage imageNamed:@"message_voice_receiver_playing_3"],
+                                                  ];
+        self.leftPicImageView.animationDuration = 1.0;
+        [self.leftPicImageView startAnimating];
+    }
     
-    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
-    button.tag = indexRow;
-    if(fromSelf)
-        button.frame =CGRectMake(320-position-yuyinwidth, 10, yuyinwidth, 54);
-    else
-        button.frame =CGRectMake(position, 10, yuyinwidth, 54);
+    if (self.block) {
+        
+        self.block(self.leftPicImageView.isAnimating);
+    }
+}
+
+- (void)rightPicImageViewClicked {
     
-    //image偏移量
-    UIEdgeInsets imageInsert;
-    imageInsert.top = -10;
-    imageInsert.left = fromSelf?button.frame.size.width/3:-button.frame.size.width/3;
-    button.imageEdgeInsets = imageInsert;
+    if (self.rightPicImageView.isAnimating) {
+        
+        [self.rightPicImageView stopAnimating];
+    } else {
+     
+        self.rightPicImageView.animationImages = @[
+                                                   [UIImage imageNamed:@"message_voice_sender_playing_1"],
+                                                   [UIImage imageNamed:@"message_voice_sender_playing_2"],
+                                                   [UIImage imageNamed:@"message_voice_sender_playing_3"],
+                                                   ];
+        self.rightPicImageView.animationDuration = 1.0;
+        [self.rightPicImageView startAnimating];
+    }
     
-    [button setImage:[UIImage imageNamed:fromSelf?@"SenderVoiceNodePlaying":@"ReceiverVoiceNodePlaying"] forState:UIControlStateNormal];
-    UIImage *backgroundImage = [UIImage imageNamed:fromSelf?@"SenderVoiceNodeDownloading":@"ReceiverVoiceNodeDownloading"];
-    backgroundImage = [backgroundImage stretchableImageWithLeftCapWidth:20 topCapHeight:0];
-    [button setBackgroundImage:backgroundImage forState:UIControlStateNormal];
+    if (self.block) {
+        
+        self.block(self.rightPicImageView.isAnimating);
+    }
+}
+
+- (void)setBlock:(PlayTheRecordAudio)block {
     
-    UILabel *label = [[UILabel alloc]initWithFrame:CGRectMake(fromSelf?-30:button.frame.size.width, 0, 30, button.frame.size.height)];
-    label.text = [NSString stringWithFormat:@"%ld''",(long)logntime];
-    label.textColor = [UIColor grayColor];
-    label.font = [UIFont systemFontOfSize:13];
-    label.textAlignment = NSTextAlignmentCenter;
-    label.backgroundColor = [UIColor clearColor];
-    [button addSubview:label];
+    _block = block;
+}
+
+- (void)setChatItem:(UToChatItem *)chatItem {
     
-    return button;
+    _chatItem = chatItem;
+    [self updateUI];
+}
+
+- (void)updateUI {
+    
+    CGFloat width = SCREEN_WIDTH*3/4-LeftMargin-30-PixelSpacing-RightMargin-PixelSpacing-LeftMargin-PixelSpacing-5;
+    
+    if (self.chatItem.states == textStates) {
+        
+        NSString *string = [NSKeyedUnarchiver unarchiveObjectWithData:_chatItem.data];
+        CGRect bound = [string boundingRectWithSize:CGSizeMake(width, MAXFLOAT) options:NSStringDrawingUsesLineFragmentOrigin attributes:@{NSFontAttributeName:MessageLabelFont} context:nil];
+        bound.size.width += PixelSpacing*2+LeftMargin+RightMargin+2;
+        bound.size.height += PixelSpacing*3;
+        
+        //如果自己发的
+        if(self.chatItem.isSelf) {
+            
+            self.rightLabel.hidden = NO;
+            self.rightPicImageView.hidden = YES;
+            self.rightLabel.text = string;
+            [self.rightBackImageView mas_updateConstraints:^(MASConstraintMaker *make) {
+                make.width.mas_equalTo(bound.size.width);
+                make.height.mas_equalTo(bound.size.height);
+            }];
+        } else {
+            
+            self.leftLabel.text = string;
+            self.leftLabel.hidden = NO;
+            self.leftPicImageView.hidden = YES;
+            [self.leftBackImageView mas_updateConstraints:^(MASConstraintMaker *make) {
+                make.width.mas_equalTo(bound.size.width);
+                make.height.mas_equalTo(bound.size.height);
+            }];
+        }
+    } else if (self.chatItem.states == picStates) {
+        
+        //如果自己发的
+        if(self.chatItem.isSelf) {
+            
+            self.rightLabel.hidden = YES;
+            self.rightPicImageView.hidden = NO;
+            UIImage *image = [UIImage imageWithData:self.chatItem.data];
+            self.rightPicImageView.image = image;
+            CGSize size = image.size;
+            if (size.width > width) {
+                
+                size.height = width/size.width*size.height;
+            } else {
+                
+                
+            }
+            size.width += LeftMargin+RightMargin;
+            size.height += TopMargin+BottomMargin+PixelSpacing*2;
+            [self.rightBackImageView mas_updateConstraints:^(MASConstraintMaker *make) {
+                make.width.mas_equalTo(size.width);
+                make.height.mas_equalTo(size.height);
+            }];
+        } else {
+            
+            self.leftLabel.hidden = YES;
+            self.leftPicImageView.hidden = NO;
+            UIImage *image = [UIImage imageWithData:self.chatItem.data];
+            self.leftPicImageView.image = image;
+            CGSize size = image.size;
+            if (size.width > width) {
+                
+                size.height = width/size.width*size.height;
+            } else {
+                
+                
+            }
+            size.width += LeftMargin+RightMargin;
+            size.height += TopMargin+BottomMargin+PixelSpacing*2;
+            [self.leftBackImageView mas_updateConstraints:^(MASConstraintMaker *make) {
+                make.width.mas_equalTo(size.width);
+                make.height.mas_equalTo(size.height);
+            }];
+        }
+    } else if (self.chatItem.states == voiceStates) {
+        
+        //如果自己发的
+        if(self.chatItem.isSelf) {
+            
+            self.rightLabel.hidden = YES;
+            self.rightPicImageView.hidden = NO;
+            UIImage *image = [UIImage imageNamed:@"message_voice_sender_normal"];
+            self.rightPicImageView.image = image;
+            CGSize size = image.size;
+            if (size.width > width) {
+                
+                size.height = width/size.width*size.height;
+            } else {
+                
+                
+            }
+            size.width += LeftMargin+RightMargin;
+            size.height += TopMargin+BottomMargin+PixelSpacing*2;
+            [self.rightBackImageView mas_updateConstraints:^(MASConstraintMaker *make) {
+                make.width.mas_equalTo(size.width);
+                make.height.mas_equalTo(size.height);
+            }];
+        } else {
+            
+            self.leftLabel.hidden = YES;
+            self.leftPicImageView.hidden = NO;
+            UIImage *image = [UIImage imageNamed:@"message_voice_receiver_normal"];
+            self.leftPicImageView.image = image;
+            CGSize size = image.size;
+            if (size.width > width) {
+                
+                size.height = width/size.width*size.height;
+            } else {
+                
+                
+            }
+            size.width += LeftMargin+RightMargin;
+            size.height += TopMargin+BottomMargin+PixelSpacing*2;
+            [self.leftBackImageView mas_updateConstraints:^(MASConstraintMaker *make) {
+                make.width.mas_equalTo(size.width);
+                make.height.mas_equalTo(size.height);
+            }];
+        }
+    } else if (self.chatItem.states == videoStates) {
+        
+        //如果自己发的
+        if(self.chatItem.isSelf) {
+            
+            self.rightLabel.hidden = YES;
+            self.rightPicImageView.hidden = NO;
+            UIImage *image = [UIImage imageNamed:@"message_voice_sender_normal"];
+            self.rightPicImageView.image = image;
+            CGSize size = image.size;
+            if (size.width > width) {
+                
+                size.height = width/size.width*size.height;
+            } else {
+                
+                
+            }
+            size.width += LeftMargin+RightMargin;
+            size.height += TopMargin+BottomMargin+PixelSpacing*2;
+            [self.rightBackImageView mas_updateConstraints:^(MASConstraintMaker *make) {
+                make.width.mas_equalTo(size.width);
+                make.height.mas_equalTo(size.height);
+            }];
+        } else {
+            
+            self.leftLabel.hidden = YES;
+            self.leftPicImageView.hidden = NO;
+            UIImage *image = [UIImage imageNamed:@"message_voice_receiver_normal"];
+            self.leftPicImageView.image = image;
+            CGSize size = image.size;
+            if (size.width > width) {
+                
+                size.height = width/size.width*size.height;
+            } else {
+                
+                
+            }
+            size.width += LeftMargin+RightMargin;
+            size.height += TopMargin+BottomMargin+PixelSpacing*2;
+            [self.leftBackImageView mas_updateConstraints:^(MASConstraintMaker *make) {
+                make.width.mas_equalTo(size.width);
+                make.height.mas_equalTo(size.height);
+            }];
+        }
+    }
+    
+    [self showViewIsSelf:self.chatItem.isSelf];
+}
+
+- (void)showViewIsSelf:(BOOL)isSelf {
+    
+    if (isSelf) {
+        
+        self.leftGroundView.hidden = YES;
+        self.rightGroundView.hidden = NO;
+    } else {
+        
+        self.leftGroundView.hidden = NO;
+        self.rightGroundView.hidden = YES;
+    }
 }
 
 - (void)setSelected:(BOOL)selected animated:(BOOL)animated

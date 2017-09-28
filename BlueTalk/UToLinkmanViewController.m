@@ -9,8 +9,9 @@
 #import "UToLinkmanViewController.h"
 #import "UToConversationViewController.h"
 #import "UToBlueSessionManager.h"
+#import "AppDelegate.h"
 
-@interface UToLinkmanViewController () <UITableViewDelegate, UITableViewDataSource>
+@interface UToLinkmanViewController () <UITableViewDelegate, UITableViewDataSource, UToMessageUpdateDelegate>
 
 @property (nonatomic, strong) UITableView *tableView;
 @property (nonatomic, strong) NSMutableArray *dataArray;
@@ -19,11 +20,18 @@
 
 @implementation UToLinkmanViewController
 
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    
+}
+
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
     
+    utoDelegate.rdelegate = self;
     self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"right_menu_addFri"] style:UIBarButtonItemStylePlain target:self action:@selector(addContacts)];
+    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"打开天线" style:UIBarButtonItemStyleDone target:self action:@selector(showSelfAdvertiser)];
     [self.tableView reloadData];
 }
 
@@ -31,15 +39,16 @@
     
     [get_singleton_for_class(UToBlueSessionManager) browseWithControllerInViewController:self connected:^{
         
-        self.dataArray =  [get_singleton_for_class(UToBlueSessionManager).connectedPeers mutableCopy];
-        [self.tableView reloadData];
         NSLog(@"connected");
     } canceled:^{
         
-        self.dataArray =  [get_singleton_for_class(UToBlueSessionManager).connectedPeers mutableCopy];
-        [self.tableView reloadData];
         NSLog(@"cancelled");
     }];
+}
+
+- (void)showSelfAdvertiser {
+    
+    [get_singleton_for_class(UToBlueSessionManager) advertiseForBrowserViewController];
 }
 
 - (NSMutableArray *)dataArray {
@@ -49,6 +58,12 @@
         _dataArray = [NSMutableArray array];
     }
     return _dataArray;
+}
+
+- (void)peerConnectionStatusChange:(MCPeerID *)peer state:(MCSessionState)state {
+    
+    self.dataArray =  [get_singleton_for_class(UToBlueSessionManager).connectedPeers mutableCopy];
+    [self.tableView reloadData];
 }
 
 #pragma mark - tableView

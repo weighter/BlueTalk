@@ -27,7 +27,10 @@ single_interface(UToCommonDBCache)
 // 创建表
 - (void)createTable;
 
-- (NSMutableArray *)getHistoryMessage:(NSString *)displayName;
+- (NSMutableArray *)getHistoryMessage:(NSString *)key value:(id)value;
+
+#pragma mark - 增
+- (void)addHistoryMessage:(UToChatItem *)item;
 
 - (void)updataHistoryMessage:(UToChatItem *)item;
 

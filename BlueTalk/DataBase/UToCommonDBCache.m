@@ -28,7 +28,7 @@ single_implementation(UToCommonDBCache)
 - (void)createTable {
     
     // 获取数据库地址
-    NSString* path = [UToNSFileManager getAppDocumentPublicPath];
+    NSString *path = [UToNSFileManager getAppDocumentPublicPath];
     
     if (![[NSFileManager defaultManager] fileExistsAtPath:path]) { // 如果不存在直接创建
         
@@ -37,12 +37,7 @@ single_implementation(UToCommonDBCache)
     NSString *DBPath = [NSString stringWithFormat:@"%@/%@",path,DB_COMMON_NAME];
     _dbQueue = [[FMDatabaseQueue alloc] initWithPath:DBPath];
     _dbPool = [[FMDatabasePool alloc] initWithPath:DBPath];
-    [self createAllTables];
-}
-
-// 创建数据表
-- (void)createAllTables {
-    
+    // 创建数据表
     [self createHistoryMessageTable];
 }
 
@@ -63,14 +58,16 @@ single_implementation(UToCommonDBCache)
             NSString *sql = [NSString stringWithFormat:
                              @"CREATE TABLE IF NOT EXISTS %@ ( "
                              "%@ TEXT, "
-                             "%@ TEXT, "
+                             "%@ BLOB, "
                              "%@ INTEGER, "
-                             "%@ INTEGER"
+                             "%@ BOOLEAN, "
+                             "%@ DOUBLE"
                              " ); ",
                              TableHistoryMessage,
                              MessageDisplayName,
                              MessageData,
                              MessageStates,
+                             MessageIsSelf,
                              MessageTime
                              ];
             NSLog(@"%@",sql);
@@ -87,27 +84,129 @@ single_implementation(UToCommonDBCache)
     }];
 }
 
-- (NSMutableArray *)getHistoryMessage:(NSString *)displayName {
+#pragma mark - 增
+- (void)addHistoryMessage:(UToChatItem *)item {
     
-    __block NSMutableArray *streetEntityArray = [[NSMutableArray alloc]init];
+    if (!item) {
+        
+        return;
+    }
+    
+    __block BOOL whoopsSomethingWrongHappened = true;
+    
+    [_dbQueue inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        
+        [db setShouldCacheStatements:YES];
+        db.logsErrors = YES;
+        
+        NSString *insertSql = [NSString stringWithFormat:@"INSERT INTO %@ ( "
+                               "%@, "
+                               "%@, "
+                               "%@, "
+                               "%@, "
+                               "%@ "
+                               " ) VALUES(?,?,?,?,?); ",
+                               TableHistoryMessage,
+                               MessageDisplayName,
+                               MessageData,
+                               MessageStates,
+                               MessageIsSelf,
+                               MessageTime
+                               ];
+//        NSString *strWithEncode = [[NSString alloc] initWithData:item.data encoding:NSUTF8StringEncoding];
+        whoopsSomethingWrongHappened = [db executeUpdate:insertSql,
+                                        item.displayName,
+                                        item.data,
+                                        [NSNumber numberWithInteger:item.states],
+                                        [NSNumber numberWithBool:item.isSelf],
+                                        [NSNumber numberWithDouble:item.time]
+                                        ];
+        
+        if (whoopsSomethingWrongHappened) {
+            
+            NSLog(@"save t_history_message success");
+        } else {
+            
+            NSLog(@"save t_history_message failed");
+            *rollback = YES;
+            return;
+        }
+    }];
+}
+
+#pragma mark - 删
+- (void)deleteHistoryMessage:(NSString *)key value:(id)value {
+    
+    __block BOOL whoopsSomethingWrongHappened = true;
+    
+    [_dbQueue inDatabase:^(FMDatabase *db) {
+        
+        [db setShouldCacheStatements:YES];
+        db.logsErrors = YES;
+        NSString *deleteSql = [NSString stringWithFormat:@"DELETE FROM %@ where %@ = ? ;", TableHistoryMessage, key];
+        whoopsSomethingWrongHappened = [db executeUpdate:deleteSql,value];
+        
+        if (whoopsSomethingWrongHappened) {
+            
+            NSLog(@"delete t_history_message success");
+        } else {
+            
+            NSLog(@"delete t_history_message failed");
+        }
+    }];
+}
+
+#pragma mark - 改
+- (void)alterHistoryMessage:(NSString *)key value:(id)value {
+    
+    __block BOOL whoopsSomethingWrongHappened = true;
+    
+    [_dbQueue inDatabase:^(FMDatabase *db) {
+        
+        [db setShouldCacheStatements:YES];
+        db.logsErrors = YES;
+        NSString *deleteSql = [NSString stringWithFormat:@"UPDATE %@ SET "
+                               "%@ = ? "
+                               "WHERE %@ = ? ;",
+                               TableHistoryMessage,
+                               key,
+                               MessageDisplayName
+                               ];
+        whoopsSomethingWrongHappened = [db executeUpdate:deleteSql,value];
+        
+        if (whoopsSomethingWrongHappened) {
+            
+            NSLog(@"alter t_history_message success");
+        } else {
+            
+            NSLog(@"alter t_history_message failed");
+        }
+    }];
+}
+
+#pragma mark - 查
+- (NSMutableArray *)getHistoryMessage:(NSString *)key value:(id)value {
+    
+    __block NSMutableArray *historyMessageArray = [[NSMutableArray alloc] init];
     
     [_dbPool inDatabase:^(FMDatabase *db) {
         
-        NSString *selectSql = [NSString stringWithFormat:@"SELECT * FROM %@ WHERE %@ = ? ORDER BY %@ DESC;", TableHistoryMessage, MessageDisplayName, MessageTime];
-        FMResultSet *resultSet = [db executeQuery:selectSql,displayName];
+        NSString *selectSql = [NSString stringWithFormat:@"SELECT * FROM %@ WHERE %@ = ? ORDER BY %@ DESC;", TableHistoryMessage, key, MessageTime];
+        FMResultSet *resultSet = [db executeQuery:selectSql,value];
         
         while ([resultSet next]) {
             
             NSDictionary *bb = [resultSet resultDictionary];
             NSLog(@"BB = %@",bb);
             UToChatItem *street = [UToChatItem mj_objectWithKeyValues:bb];
-            [streetEntityArray addObject:street];
+            [historyMessageArray addObject:street];
         }
         [resultSet close];
     }];
-    return streetEntityArray;
+    return historyMessageArray;
 }
 
+#pragma mark - 更新
 - (void)updataHistoryMessage:(UToChatItem *)item {
     
     __block BOOL whoopsSomethingWrongHappened = true;
@@ -121,7 +220,7 @@ single_implementation(UToCommonDBCache)
         
         if (!whoopsSomethingWrongHappened) {
             
-            NSLog(@"delete t_history_street failed");
+            NSLog(@"delete t_history_message failed");
         }
         
         NSMutableArray *chatItems = [NSMutableArray array];
@@ -146,7 +245,7 @@ single_implementation(UToCommonDBCache)
             
             if (!whoopsSomethingWrongHappened) {
                 
-                NSLog(@"delete t_history_street failed");
+                NSLog(@"delete t_history_message failed");
                 *rollback = YES;
                 return;
             }
@@ -157,23 +256,23 @@ single_implementation(UToCommonDBCache)
                                "%@, "
                                "%@, "
                                "%@, "
+                               "%@, "
                                "%@ "
-                               " ) VALUES(?,?,?,?,?,?); ",
+                               " ) VALUES(?,?,?,?,?); ",
                                TableHistoryMessage,
                                MessageDisplayName,
                                MessageData,
                                MessageStates,
+                               MessageIsSelf,
                                MessageTime
                                ];
         
-        NSDate *date = [NSDate date];
-        UInt64 datetime = [date timeIntervalSince1970];
-        
         whoopsSomethingWrongHappened = [db executeUpdate:insertSql,
                                         item.displayName,
-                                        item.recordData,
-                                        item.states,
-                                        [NSNumber numberWithLongLong:datetime]
+                                        item.data,
+                                        [NSNumber numberWithInteger:item.states],
+                                        [NSNumber numberWithBool:item.isSelf],
+                                        [NSNumber numberWithDouble:item.time]
                                         ];
         
         if (whoopsSomethingWrongHappened) {
@@ -187,6 +286,5 @@ single_implementation(UToCommonDBCache)
         }
     }];
 }
-
 
 @end

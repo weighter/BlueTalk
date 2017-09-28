@@ -12,21 +12,24 @@
 @implementation UToChatItem
 
 // 此处添加的原因 是iphone 6 和  iphone 5的区别，暂时具体原因不知道
-@synthesize recordData = _recordData;
-- (void)setRecordData:(NSData *)recordData
-{
-    _recordData = recordData;
+@synthesize data = _data;
+- (void)setData:(NSData *)data {
+    
+    _data = data;
 }
 
-
-- (NSData *)recordData
-{
-    return _recordData;
+- (NSData *)data {
+    
+    return _data;
 }
 
 + (NSDictionary *)mj_replacedKeyFromPropertyName {
     
-    return @{@"displayName":@[MessageDisplayName,@"displayName"],@"recordData":@[MessageData,@"recordData"],@"content":@[MessageContent,@"content"],@"picImage":@[@"picImage"],@"states":@[MessageStates,@"states"]};
+    return @{@"displayName":@[MessageDisplayName, @"displayName"],
+             @"data":@[MessageData, @"data"],
+             @"time":@[MessageTime, @"time"],
+             @"states":@[MessageStates, @"states"],
+             @"isSelf":@[MessageIsSelf, @"isSelf"]};
 }
 
 @end

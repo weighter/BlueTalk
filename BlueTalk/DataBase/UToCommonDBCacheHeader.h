@@ -16,9 +16,9 @@
 
 #define TableHistoryMessage     @"t_history_message"
 #define MessageDisplayName      @"message_display_name"
-#define MessageContent          @"message_content"
 #define MessageData             @"message_data"
 #define MessageStates           @"message_states"
+#define MessageIsSelf           @"message_isSelf"
 #define MessageTime             @"message_time"
 
 #endif /* UToCommonDBCacheHeader_h */

@@ -21,7 +21,6 @@
     
     UIImagePickerController *_picker;
     UToAlert *_alret;
-    MBProgressHUD *_hud;
 }
 
 @property (nonatomic, strong) UITableView *tableView;
@@ -29,9 +28,12 @@
 @property (nonatomic, strong) UIView *sendBackView;
 @property (nonatomic, strong) UITextView *sendTextView;
 @property (nonatomic, strong) UIButton *voiceButton;
+@property (nonatomic, strong) UIButton *photoButton;
 @property (nonatomic, strong) UIButton *sendButton;
 @property (nonatomic, strong) NSMutableData *streamData;
 @property (nonatomic, strong) UToAudioRecorder *audio;
+@property (nonatomic, strong) UToChatCell *chatCell;
+@property (nonatomic, strong) MBProgressHUD *hud;
 
 @end
 
@@ -57,6 +59,8 @@
     self.navigationItem.title = self.peerId.displayName;
     self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"连接" style:UIBarButtonItemStyleDone target:self action:@selector(linkContact)];
     
+    self.dataArray = [get_singleton_for_class(UToCommonDBCache) getHistoryMessage:MessageDisplayName value:self.peerId.displayName];
+    
     [self.tableView reloadData];
     
     [self createUI];
@@ -79,7 +83,7 @@
         __weak typeof(self) weakSelf = self;
         [_audio setAudioPowerChanged:^(CGFloat value) {
             
-            _hud.progress = value;
+            weakSelf.hud.progress = value;
         }];
         
         [_audio audioRecorderDidFinish:^(BOOL flag) {
@@ -100,10 +104,21 @@
     self.sendBackView.backgroundColor = [UIColor groupTableViewBackgroundColor];
     [self.view addSubview:self.sendBackView];
     [self.sendBackView mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.left.mas_equalTo(@(0));
-        make.right.mas_equalTo(@(0));
-        make.height.mas_equalTo(@(45.));
-        make.bottom.mas_equalTo(@(0));
+        make.left.mas_equalTo(0);
+        make.right.mas_equalTo(0);
+        make.height.mas_equalTo(45.);
+        make.bottom.mas_equalTo(0);
+    }];
+    
+    self.voiceButton = [UIButton buttonWithType:UIButtonTypeInfoLight];
+    [self.voiceButton addTarget:self action:@selector(startVoiceRecord) forControlEvents:UIControlEventTouchDown];
+    [self.voiceButton addTarget:self action:@selector(stopVoiceRecord) forControlEvents:UIControlEventTouchUpInside];
+    [self.sendBackView addSubview:self.voiceButton];
+    [self.voiceButton mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.left.mas_equalTo(LeftMargin);
+        make.centerY.mas_equalTo(self.sendBackView.mas_centerY);
+        make.width.mas_equalTo(30);
+        make.height.mas_equalTo(30);
     }];
     
     self.sendTextView = [[UITextView alloc] init];
@@ -113,41 +128,30 @@
     self.sendTextView.delegate = self;
     [self.sendBackView addSubview:self.sendTextView];
     [self.sendTextView mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.left.mas_equalTo(@(10));
-        make.right.mas_equalTo(@(-60));
-        make.top.mas_equalTo(@(5));
-        make.bottom.mas_equalTo(@(-5));
+        make.left.mas_equalTo(self.voiceButton.mas_right).mas_offset(PixelSpacing);
+        make.top.mas_equalTo(5);
+        make.bottom.mas_equalTo(-5);
     }];
     
-    self.voiceButton = [UIButton buttonWithType:UIButtonTypeInfoLight];
-    [self.voiceButton addTarget:self action:@selector(startVoiceRecord) forControlEvents:UIControlEventTouchDown];
-    [self.voiceButton addTarget:self action:@selector(stopVoiceRecord) forControlEvents:UIControlEventTouchUpInside];
-    [self.sendBackView addSubview:self.voiceButton];
-    [self.voiceButton mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.left.mas_equalTo(@(10));
-        make.right.mas_equalTo(@(-60));
-        make.top.mas_equalTo(@(5));
-        make.bottom.mas_equalTo(@(-5));
-    }];
-    
-    UIButton *addButton = [UIButton buttonWithType:UIButtonTypeContactAdd];
-    [addButton addTarget:self action:@selector(addImage) forControlEvents:UIControlEventTouchUpInside];
-    [self.sendBackView addSubview:addButton];
-    [addButton mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.left.mas_equalTo(self.sendTextView.mas_right);
+    self.photoButton = [UIButton buttonWithType:UIButtonTypeContactAdd];
+    [self.photoButton addTarget:self action:@selector(addImage) forControlEvents:UIControlEventTouchUpInside];
+    [self.sendBackView addSubview:self.photoButton];
+    [self.photoButton mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.left.mas_equalTo(self.sendTextView.mas_right).mas_offset(PixelSpacing);
         make.centerY.mas_equalTo(self.sendBackView.mas_centerY);
-        make.width.mas_equalTo(@(30));
-        make.height.mas_equalTo(@(30));
+        make.width.mas_equalTo(30);
+        make.height.mas_equalTo(30);
     }];
     
     self.sendButton = [UIButton buttonWithType:UIButtonTypeDetailDisclosure];
     [self.sendButton addTarget:self action:@selector(voiceRecord) forControlEvents:UIControlEventTouchUpInside];
     [self.sendBackView addSubview:self.sendButton];
     [self.sendButton mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.left.mas_equalTo(addButton.mas_right);
+        make.left.mas_equalTo(self.photoButton.mas_right).mas_offset(PixelSpacing);
         make.centerY.mas_equalTo(self.sendBackView.mas_centerY);
-        make.width.mas_equalTo(@(30));
-        make.height.mas_equalTo(@(30));
+        make.right.mas_equalTo(-RightMargin);
+        make.width.mas_equalTo(30);
+        make.height.mas_equalTo(30);
     }];
     
     // 增加通知
@@ -258,7 +262,7 @@
 
 - (float)heightForString:(NSString *)value fontSize:(float)fontSize andWidth:(float)width {
     
-    UITextView *detailTextView = [[UITextView alloc]initWithFrame:CGRectMake(0, 0, width, 0)];
+    UITextView *detailTextView = [[UITextView alloc] initWithFrame:CGRectMake(0, 0, width, 0)];
     detailTextView.font = [UIFont systemFontOfSize:fontSize];
     detailTextView.text = value;
     CGSize deSize = [detailTextView sizeThatFits:CGSizeMake(width,CGFLOAT_MAX)];
@@ -297,7 +301,7 @@
         case 2: //From album
             
             _picker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
-            _picker.mediaTypes = @[(NSString *)kUTTypeMovie,(NSString *)kUTTypeImage];
+            _picker.mediaTypes = @[(NSString *)kUTTypeMovie, (NSString *)kUTTypeImage];
             
             [self presentViewController:_picker animated:YES completion:^{
                 
@@ -443,87 +447,6 @@
         }
     }
 }
-//-(void)run
-//{
-//    __weak ViewController *weakSelf = self;
-//    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-//        ALAssetsLibraryGroupsEnumerationResultsBlock listGroupBlock = ^(ALAssetsGroup *group, BOOL *stop) {
-//            if (group != nil) {
-//                [weakSelf.groupArrays addObject:group];
-//            } else {
-//                [weakSelf.groupArrays enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
-//                    [obj enumerateAssetsUsingBlock:^(ALAsset *result, NSUInteger index, BOOL  *stop) {
-//                        if ([result thumbnail] != nil) {
-//                            // 照片
-//                            if ([[result valueForProperty:ALAssetPropertyType] isEqualToString:ALAssetTypePhoto]){
-//                                
-//                                //                                NSDate *date= [result valueForProperty:ALAssetPropertyDate];
-//                                //                                UIImage *image = [UIImage imageWithCGImage:[result thumbnail]];
-//                                //                                NSString *fileName = [[result defaultRepresentation] filename];
-//                                //                                NSURL *url = [[result defaultRepresentation] url];
-//                                //                                int64_t fileSize = [[result defaultRepresentation] size];
-//                                //
-//                                //                                NSLog(@"date = %@",date);
-//                                //                                NSLog(@"fileName = %@",fileName);
-//                                //                                NSLog(@"url = %@",url);
-//                                //                                NSLog(@"fileSize = %lld",fileSize);
-//                                //
-//                                //                                // UI的更新记得放在主线程,要不然等子线程排队过来都不知道什么年代了,会很慢的
-//                                //                                dispatch_async(dispatch_get_main_queue(), ^{
-//                                //                                    self.litimgView.image = image;
-//                                //                                });
-//                                NSLog(@"读取到照片了");
-//                            }
-//                            // 视频
-//                            else if ([[result valueForProperty:ALAssetPropertyType] isEqualToString:ALAssetTypeVideo] ){
-//                                
-//                                NSURL *url = [[result defaultRepresentation] url];
-//                                UIImage *image = [UIImage imageWithCGImage:[result thumbnail]];                                NSLog(@"%@",url);
-//                                dispatch_async(dispatch_get_main_queue(), ^{
-//                                    self.litimgView.image = image;
-//                                });
-//                                // 和图片方法类似
-//                            }
-//                        }
-//                    }];
-//                }];
-//                
-//            }
-//        };
-//        
-//        ALAssetsLibraryAccessFailureBlock failureBlock = ^(NSError *error)
-//        {
-//            
-//            NSString *errorMessage = nil;
-//            
-//            switch ([error code]) {
-//                case ALAssetsLibraryAccessUserDeniedError:
-//                case ALAssetsLibraryAccessGloballyDeniedError:
-//                    errorMessage = @"用户拒绝访问相册,请在<隐私>中开启";
-//                    break;
-//                    
-//                default:
-//                    errorMessage = @"Reason unknown.";
-//                    break;
-//            }
-//            
-//            dispatch_async(dispatch_get_main_queue(), ^{
-//                UIAlertView *alertView = [[UIAlertView alloc]initWithTitle:@"错误,无法访问!"
-//                                                                   message:errorMessage
-//                                                                  delegate:self
-//                                                         cancelButtonTitle:@"确定"
-//                                                         otherButtonTitles:nil, nil];
-//                [alertView show];
-//            });
-//        };
-//        
-//        
-//        ALAssetsLibrary *assetsLibrary = [[ALAssetsLibrary alloc]  init];
-//        [assetsLibrary enumerateGroupsWithTypes:ALAssetsGroupAll
-//                                     usingBlock:listGroupBlock failureBlock:failureBlock];
-//    });
-//}
-
 
 // 获取毫秒
 - (long long)getDateTimeTOMilliSeconds:(NSDate *)datetime {
@@ -561,10 +484,7 @@
 #pragma mark - 下面是流的传输
 - (void)voiceRecord {
     
-    _hud = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
-    _hud.mode = MBProgressHUDModeDeterminateHorizontalBar;
-    _hud.label.text = @"录音中...";
-    [self.audio startRecord];
+    
 }
 
 - (void)startVoiceRecord {
@@ -577,7 +497,7 @@
 
 - (void)stopVoiceRecord {
     
-    [_hud hideAnimated:YES];
+    [self.hud hideAnimated:YES];
     [self.audio stopRecord];
     NSData *data = [NSData dataWithContentsOfURL:[self.audio savePath]];
     UToChatItem *chatItem = [[UToChatItem alloc] init];
@@ -619,161 +539,6 @@
         [get_singleton_for_class(UToBlueSessionManager).outputStream open];
     }
 }
-
-//// 下面是一个代理
-//- (void)stream:(NSStream *)aStream handleEvent:(NSStreamEvent)eventCode {
-//    
-//    if(eventCode == NSStreamEventHasBytesAvailable) {
-//        
-//        // 有可读的字节，接收到了数据
-//        NSInputStream *input = (NSInputStream *)aStream;
-//        uint8_t buffer[1024];
-//        NSInteger length = [input read:buffer maxLength:1024];
-//        [self.streamData appendBytes:(const void *)buffer length:(NSUInteger)length];
-//        // 记住这边的数据陆陆续续的
-//    } else if(eventCode == NSStreamEventHasSpaceAvailable) {
-//        
-//        // 可以使用输出流的空间，此时可以发送数据给服务器
-//        // 发送数据的
-//        NSData *data = [NSData dataWithContentsOfURL:[self.audio savePath]];
-//        self.audio.playData = data;
-//        [self.audio playRecord];
-//        UToChatItem *chatItem = [[UToChatItem alloc] init];
-//        chatItem.isSelf = YES;
-//        chatItem.displayName = get_singleton_for_class(UToBlueSessionManager).myPeerID.displayName;
-//        chatItem.states = videoStates;
-//        chatItem.data = data;
-//        chatItem.time = [[NSDate date] timeIntervalSince1970];
-//        [self.dataArray addObject:chatItem];
-//        [self insertTheTableToButtom];
-//        
-//        NSOutputStream *output = (NSOutputStream *)aStream;
-//        [output write:data.bytes maxLength:data.length];
-//        [output close];
-//    }
-//    
-//    if(eventCode == NSStreamEventEndEncountered) {
-//        
-//        // 流结束事件，在此事件中负责做销毁工作
-//        // 同时也是获得最终数据的好地方
-//        
-//        UToChatItem *chatItem = [[UToChatItem alloc] init];
-//        chatItem.isSelf = NO;
-//        chatItem.displayName = get_singleton_for_class(UToBlueSessionManager).myPeerID.displayName;
-//        chatItem.states = videoStates;
-//        chatItem.data = self.streamData;
-//        chatItem.time = [[NSDate date] timeIntervalSince1970];
-//        [self.dataArray addObject:chatItem];
-//        [self insertTheTableToButtom];
-//        
-//        [aStream close];
-//        [aStream removeFromRunLoop:[NSRunLoop mainRunLoop] forMode:NSDefaultRunLoopMode];
-//        if([aStream isKindOfClass:[NSInputStream class]]) {
-//            
-//            self.streamData = nil;
-//        }
-//    }
-//    
-//    if(eventCode == NSStreamEventErrorOccurred) {
-//        
-//        // 发生错误
-//        NSLog(@"error");
-//    }
-//}
-//
-//- (NSMutableData *)streamData
-//{
-//    if(!_streamData) {
-//        _streamData = [NSMutableData data];
-//    }
-//    return _streamData;
-//}
-//
-///***********-----------------------  公用的数据 --------------------***********************************/
-//
-//- (NSData *)imageData
-//{
-//    return [NSData dataWithContentsOfURL:[self imageURL]];
-//}
-//
-//- (NSURL *)imageURL {
-//    NSString *path = [[NSBundle mainBundle]pathForResource:@"301-alien-ship@2x" ofType:@"png"];
-//    // 这儿有个技术点
-//    // 那个如何将 image转化成 路径
-//    
-//    NSURL *url = [NSURL fileURLWithPath:path];
-//    return url;
-//}
-//
-///***********----------------------------------------------***********************************/
-//#pragma mark 尝试空白处的连接
-//
-//- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
-//{
-//    UITouch * touch = [[event allTouches] anyObject];
-//    if(touch.tapCount >= 1)
-//    {
-//        [self.sendTextView resignFirstResponder];
-//    }
-//}
-//
-//
-///***********-------------------语音---------------------------***********************************/
-//
-//#pragma mark 尝试语音的录制和播出
-//
-//- (void)buildVideoForWe
-//{
-//    // 设置录音会话
-//}
-//
-//- (void)SetTempRecordView
-//{
-//    _backRemindRecordView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, WIDTH, 150)];
-//    _backRemindRecordView.center = self.view.center;
-//    _backRemindRecordView.backgroundColor = [UIColor lightGrayColor];
-//    [self.view addSubview:_backRemindRecordView];
-//    
-//    
-//    UILabel * beginLabel = [[UILabel alloc] initWithFrame:CGRectMake(60, 50, WIDTH -120, 50)];
-//    beginLabel.backgroundColor = [UIColor greenColor];
-//    beginLabel.text = @"长按录音开始···";
-//    beginLabel.tag = 1001;
-//    beginLabel.textAlignment = NSTextAlignmentCenter;
-//    beginLabel.userInteractionEnabled = YES;
-//    [_backRemindRecordView addSubview:beginLabel];
-//    
-//    UILongPressGestureRecognizer * longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(longPressNextDo:)];
-//    [beginLabel addGestureRecognizer:longPress];
-//    
-//    
-//    
-//    
-//    
-//    
-//}
-//
-//
-//
-//- (void)longPressNextDo:(UILongPressGestureRecognizer * )longPress
-//{
-////    if(longPress.state == UIGestureRecognizerStateBegan)
-////    {
-////        NSLog(@"begin");
-////        UILabel * label = (UILabel *)[_backRemindRecordView viewWithTag:1001];
-////        label.text = @"录音正在进行中···";
-////        label.backgroundColor = [UIColor orangeColor];
-////        [self BeginRecordClick];
-////    }
-////    if(longPress.state == UIGestureRecognizerStateEnded)
-////    {
-////        [self OkStopClick];
-////        [_backRemindRecordView removeFromSuperview];
-////        [self  sendAsStream];
-////        NSLog(@"stop");
-////        
-////    }
-//}
 
 #pragma mark - 以下是为了配合  键盘上移的变化
 - (void)addTheNoticeForKeyDownUp {
@@ -877,15 +642,30 @@
     
     UToChatItem *chatItem = [self.dataArray objectAtIndex:indexPath.row];
     cell.chatItem = chatItem;
+    __weak typeof(self) weakSelf = self;
+    __weak typeof(cell) weakCell = cell;
     [cell setBlock:^(BOOL startPlay) {
         
         if (startPlay) {
+
+            if (weakSelf.chatCell != weakCell) {
+                
+                [weakSelf.chatCell endPlaying];
+                weakSelf.chatCell = weakCell;
+            }
             
-            self.audio.playData = chatItem.data;
-            [self.audio playRecord];
+            weakSelf.audio.playData = chatItem.data;
+            [weakSelf.audio playRecord];
+            [weakSelf.audio audioPlayerDidFinishPlaying:^(BOOL flag) {
+                
+                if (flag) {
+                    
+                    [weakCell endPlaying];
+                }
+            }];
         } else {
             
-            [self.audio stopPlayRecord];
+            [weakSelf.audio stopPlayRecord];
         }
     }];
     return cell;
@@ -909,6 +689,24 @@
     } else if(chatItem.states == picStates) {
         
         UIImage *image = [UIImage imageWithData:chatItem.data];
+        CGSize size = image.size;
+        if (size.width > width) {
+            
+            size.height = width/size.width*size.height;
+        }
+        return size.height+TopMargin+BottomMargin+PixelSpacing*2; // 与view的距离 ＋ 与Cell的距离
+    } else if(chatItem.states == voiceStates) {
+        
+        UIImage *image = [UIImage imageNamed:@"message_voice_sender_normal"];
+        CGSize size = image.size;
+        if (size.width > width) {
+            
+            size.height = width/size.width*size.height;
+        }
+        return size.height+TopMargin+BottomMargin+PixelSpacing*2; // 与view的距离 ＋ 与Cell的距离
+    } else if(chatItem.states == videoStates) {
+        
+        UIImage *image = [UIImage imageNamed:@"message_voice_sender_normal"];
         CGSize size = image.size;
         if (size.width > width) {
             

@@ -27,6 +27,7 @@
 @property (strong, nonatomic) MCNearbyServiceAdvertiser *advertiser; // 服务助手
 @property (strong, nonatomic) MCNearbyServiceBrowser *browser; // 搜索蓝牙者
 @property (strong, nonatomic) MCPeerID *peerID; // 用户
+@property (strong, nonatomic) MCPeerID *inputPeerID; //
 @property (strong, nonatomic) NSMutableData *inputStreamData;
 @property (strong, nonatomic) NSData *outputStreamData;
 
@@ -162,6 +163,7 @@ single_implementation(UToBlueSessionManager)
 // 这是参加  普通流的会议
 - (void)session:(MCSession *)session didReceiveStream:(NSInputStream *)stream withName:(NSString *)streamName fromPeer:(MCPeerID *)peerID {
    
+    self.inputPeerID = peerID;
     self.inputStreamData = [NSMutableData data];
     self.inputStream = stream;
     self.inputStream.delegate = self;
@@ -416,14 +418,14 @@ single_implementation(UToBlueSessionManager)
         
         UToChatItem *chatItem = [[UToChatItem alloc] init];
         chatItem.isSelf = NO;
-        chatItem.displayName = get_singleton_for_class(UToBlueSessionManager).myPeerID.displayName;
+        chatItem.displayName = self.inputPeerID.displayName;
         chatItem.states = voiceStates;
         chatItem.data = [self.inputStreamData copy];
         chatItem.time = [[NSDate date] timeIntervalSince1970];
         
         if (self.receiveStreamDataBlock) {
             
-            self.receiveStreamDataBlock(chatItem, self.peerID);
+            self.receiveStreamDataBlock(chatItem, self.inputPeerID);
         }
         
         [aStream close];

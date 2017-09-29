@@ -197,45 +197,53 @@
 
 - (void)leftPicImageViewClicked {
     
-    if (self.leftPicImageView.isAnimating) {
+    if (self.chatItem.states == voiceStates) {
         
-        [self.leftPicImageView stopAnimating];
-    } else {
+        if (self.leftPicImageView.isAnimating) {
+            
+            [self.leftPicImageView stopAnimating];
+        } else {
+            
+            [self.leftPicImageView startAnimating];
+        }
         
-        self.leftPicImageView.animationImages = @[
-                                                  [UIImage imageNamed:@"message_voice_receiver_playing_1"],
-                                                  [UIImage imageNamed:@"message_voice_receiver_playing_2"],
-                                                  [UIImage imageNamed:@"message_voice_receiver_playing_3"],
-                                                  ];
-        self.leftPicImageView.animationDuration = 1.0;
-        [self.leftPicImageView startAnimating];
+        if (self.block) {
+            
+            self.block(self.leftPicImageView.isAnimating);
+        }
     }
     
-    if (self.block) {
-        
-        self.block(self.leftPicImageView.isAnimating);
-    }
 }
 
 - (void)rightPicImageViewClicked {
     
+    if (self.chatItem.states == voiceStates) {
+        
+        if (self.rightPicImageView.isAnimating) {
+            
+            [self.rightPicImageView stopAnimating];
+        } else {
+            
+            [self.rightPicImageView startAnimating];
+        }
+        
+        if (self.block) {
+            
+            self.block(self.rightPicImageView.isAnimating);
+        }
+    }
+    
+    
+}
+
+- (void)endPlaying {
+    
     if (self.rightPicImageView.isAnimating) {
         
         [self.rightPicImageView stopAnimating];
-    } else {
-     
-        self.rightPicImageView.animationImages = @[
-                                                   [UIImage imageNamed:@"message_voice_sender_playing_1"],
-                                                   [UIImage imageNamed:@"message_voice_sender_playing_2"],
-                                                   [UIImage imageNamed:@"message_voice_sender_playing_3"],
-                                                   ];
-        self.rightPicImageView.animationDuration = 1.0;
-        [self.rightPicImageView startAnimating];
-    }
-    
-    if (self.block) {
+    } else if (self.leftPicImageView.isAnimating) {
         
-        self.block(self.rightPicImageView.isAnimating);
+        [self.leftPicImageView stopAnimating];
     }
 }
 
@@ -348,6 +356,12 @@
                 make.width.mas_equalTo(size.width);
                 make.height.mas_equalTo(size.height);
             }];
+            self.rightPicImageView.animationImages = @[
+                                                       [UIImage imageNamed:@"message_voice_sender_playing_1"],
+                                                       [UIImage imageNamed:@"message_voice_sender_playing_2"],
+                                                       [UIImage imageNamed:@"message_voice_sender_playing_3"],
+                                                       ];
+            self.rightPicImageView.animationDuration = 1.0;
         } else {
             
             self.leftLabel.hidden = YES;
@@ -368,6 +382,12 @@
                 make.width.mas_equalTo(size.width);
                 make.height.mas_equalTo(size.height);
             }];
+            self.leftPicImageView.animationImages = @[
+                                                      [UIImage imageNamed:@"message_voice_receiver_playing_1"],
+                                                      [UIImage imageNamed:@"message_voice_receiver_playing_2"],
+                                                      [UIImage imageNamed:@"message_voice_receiver_playing_3"],
+                                                      ];
+            self.leftPicImageView.animationDuration = 1.0;
         }
     } else if (self.chatItem.states == videoStates) {
         

@@ -32,4 +32,6 @@ typedef void(^PlayTheRecordAudio)(BOOL startPlay);
 
 - (void)showViewIsSelf:(BOOL)isSelf;
 
+- (void)endPlaying;
+
 @end

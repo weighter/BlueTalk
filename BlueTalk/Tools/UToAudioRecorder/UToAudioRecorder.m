@@ -147,6 +147,12 @@
     _block = block;
 }
 
+- (void)setPlayData:(NSData *)playData {
+    
+    self.audioPlayer = nil;
+    _playData = playData;
+}
+
 #pragma mark - UI事件
 // 点击录音按钮
 - (void)startRecord {

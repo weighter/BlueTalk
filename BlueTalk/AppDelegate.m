@@ -17,8 +17,7 @@ AppDelegate *utoDelegate;
 @interface AppDelegate () {
     
     UToAlert *_alret;
-    MCPeerID *_peerId;
-    NSMutableData *_streamData;
+    MBProgressHUD *_hud;
 }
 
 @end
@@ -120,6 +119,7 @@ AppDelegate *utoDelegate;
     // 发图片之后的返回
     [get_singleton_for_class(UToBlueSessionManager) receiveFinalResourceOnMainQueue:YES complete:^(NSString *name, MCPeerID *peer, NSURL *url, NSError *error) {
         
+        [_hud hideAnimated:YES];
         __strong typeof (weakSelf) strongSelf = weakSelf;
         NSData *data = [NSData dataWithContentsOfURL:url];
         
@@ -135,95 +135,23 @@ AppDelegate *utoDelegate;
             [strongSelf.rdelegate receivedNewMessage:peer chatItem:chatItem];
         }
     }];
+    
     [get_singleton_for_class(UToBlueSessionManager) startReceivingResourceOnMainQueue:YES block:^(NSString *name, MCPeerID *peer, NSProgress *progress) {
-//        MBProgressHUD *_hud = [MBProgressHUD showHUDAddedTo:[UIApplication sharedApplication].keyWindow animated:YES];
-//        _hud.mode = MBProgressHUDModeDeterminateHorizontalBar;
-//        _hud.label.text = @"录音中";
-//        _hud.progress = progress;
-    }];
-    // 流
-    [get_singleton_for_class(UToBlueSessionManager) didReceiveStreamFromPeer:^(NSInputStream *stream, MCPeerID *peer, NSString *streamName) {
-        _peerId = peer;
-//        __strong typeof (weakSelf) strongSelf = weakSelf;
-//        strongSelf.inputStream = stream;
-//        strongSelf.inputStream.delegate = self;
-//        [strongSelf.inputStream scheduleInRunLoop:[NSRunLoop mainRunLoop] forMode:NSDefaultRunLoopMode];
-//        [strongSelf.inputStream open];
-//        
-//        NSLog(@"we need");
-        
+        _hud = [MBProgressHUD showHUDAddedTo:[UIApplication sharedApplication].keyWindow animated:YES];
+        _hud.mode = MBProgressHUDModeDeterminateHorizontalBar;
+        _hud.label.text = @"接收图片中";
+        _hud.progress = progress.fractionCompleted;
     }];
     
+    // 流
     [get_singleton_for_class(UToBlueSessionManager) didFinishReceiveStreamFromPeer:^(UToChatItem *chatItem, MCPeerID *peer) {
         
         [get_singleton_for_class(UToCommonDBCache) addHistoryMessage:chatItem];
         if ([self.rdelegate respondsToSelector:@selector(receivedNewMessage:chatItem:)]) {
             
-            [self.rdelegate receivedNewMessage:_peerId chatItem:chatItem];
+            [self.rdelegate receivedNewMessage:peer chatItem:chatItem];
         }
     }];
-}
-
-// 下面是一个代理
-- (void)stream:(NSStream *)aStream handleEvent:(NSStreamEvent)eventCode {
-    
-    if (eventCode == NSStreamEventHasBytesAvailable) { // 接收
-        
-        // 有可读的字节，接收到了数据
-        NSInputStream *input = (NSInputStream *)aStream;
-        uint8_t buffer[1024];
-        NSInteger length = [input read:buffer maxLength:1024];
-        [_streamData appendBytes:(const void *)buffer length:(NSUInteger)length];
-    } else if (eventCode == NSStreamEventHasSpaceAvailable) { // 发送
-        
-        // 可以使用输出流的空间，此时可以发送数据给服务器
-        // 发送数据的
-//        NSData *data = [self getVideoStremData];
-//        UToChatItem *chatItem = [[UToChatItem alloc] init];
-//        chatItem.isSelf = YES;
-//        chatItem.displayName = get_singleton_for_class(UToBlueSessionManager).myPeerID.displayName;
-//        chatItem.states = videoStates;
-//        chatItem.data = data;
-//        chatItem.time = [[NSDate date] timeIntervalSince1970];
-//        [self.dataArray addObject:chatItem];
-//        [self insertTheTableToButtom];
-//        [get_singleton_for_class(UToCommonDBCache) addHistoryMessage:chatItem];
-        if ([self.rdelegate respondsToSelector:@selector(receivedNewMessage:chatItem:)]) {
-            
-            [self.rdelegate sendNewMessageIsSuccess:YES];
-        }
-        NSOutputStream *output = (NSOutputStream *)aStream;
-//        [output write:data.bytes maxLength:data.length];
-        [output close];
-    } else if (eventCode == NSStreamEventEndEncountered) { // 完成
-        
-        // 流结束事件，在此事件中负责做销毁工作
-        // 同时也是获得最终数据的好地方
-        
-        UToChatItem *chatItem = [[UToChatItem alloc] init];
-        chatItem.isSelf = NO;
-        chatItem.displayName = get_singleton_for_class(UToBlueSessionManager).myPeerID.displayName;
-        chatItem.states = videoStates;
-        chatItem.data = _streamData;
-        chatItem.time = [[NSDate date] timeIntervalSince1970];
-
-        [get_singleton_for_class(UToCommonDBCache) addHistoryMessage:chatItem];
-        if ([self.rdelegate respondsToSelector:@selector(receivedNewMessage:chatItem:)]) {
-            
-            [self.rdelegate receivedNewMessage:_peerId chatItem:chatItem];
-        }
-        
-        [aStream close];
-        [aStream removeFromRunLoop:[NSRunLoop mainRunLoop] forMode:NSDefaultRunLoopMode];
-        if ([aStream isKindOfClass:[NSInputStream class]]) {
-            
-            _streamData = nil;
-        }
-    } else if (eventCode == NSStreamEventErrorOccurred) { // 错误
-        
-        // 发生错误
-        NSLog(@"error");
-    }
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application {

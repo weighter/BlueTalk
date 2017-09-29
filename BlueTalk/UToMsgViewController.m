@@ -18,7 +18,7 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view.
     self.tabBarItem.badgeValue = @"1";
-    [self performSelector:@selector(test) withObject:nil afterDelay:2.0];
+    [self performSelector:@selector(test) withObject:nil afterDelay:5.0];
 }
 
 - (void)test {
